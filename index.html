@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator & Strength Meter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+        }
+        .password-display {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            color: #333;
+            background: #f9f9f9;
+            cursor: text;
+        }
+        .password-display:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .options {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 500;
+        }
+        .options input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .length-input {
+            margin-bottom: 20px;
+        }
+        .length-input label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 500;
+        }
+        .length-input input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .generate-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .generate-btn:hover {
+            background-color: #5a6fd1;
+        }
+        .strength-meter {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .password-length {
+            margin-top: 10px;
+            color: #555;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Password Generator & Strength Meter</h1>
+    <input type="text" id="passwordDisplay" class="password-display" placeholder="Your password will appear here">
+
+    <div class="length-input">
+        <label for="passwordLength">Password Length:</label>
+        <input type="number" id="passwordLength" min="4" max="50" value="12">
+    </div>
+
+    <div class="options">
+        <label>
+            <input type="checkbox" id="includeUppercase" checked> Include Uppercase Letters (A-Z)
+        </label>
+        <label>
+            <input type="checkbox" id="includeLowercase" checked> Include Lowercase Letters (a-z)
+        </label>
+        <label>
+            <input type="checkbox" id="includeNumbers" checked> Include Numbers (0-9)
+        </label>
+        <label>
+            <input type="checkbox" id="includeSymbols" checked> Include Symbols (!@#$%^&*)
+        </label>
+    </div>
+
+    <button class="generate-btn" onclick="generatePassword()">Generate Password</button>
+    <div id="strengthMeter" class="strength-meter"></div>
+    <div id="passwordLengthDisplay" class="password-length"></div>
+    <button class="copy-btn" onclick="copyPassword()">Copy Password</button>
+</div>
+
+<script>
+    const passwordDisplay = document.getElementById('passwordDisplay');
+    const passwordLength = document.getElementById('passwordLength');
+    const includeUppercase = document.getElementById('includeUppercase');
+    const includeLowercase = document.getElementById('includeLowercase');
+    const includeNumbers = document.getElementById('includeNumbers');
+    const includeSymbols = document.getElementById('includeSymbols');
+    const strengthMeter = document.getElementById('strengthMeter');
+    const passwordLengthDisplay = document.getElementById('passwordLengthDisplay');
+
+    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+    const numberChars = '0123456789';
+    const symbolChars = '!@#$%^&*()_+{}:"<>?[];,./`~';
+
+    const strengthLevels = [
+        { level: "Extremely Weak", color: "#ff0000" },
+        { level: "Weak", color: "#ff4000" },
+        { level: "Meh", color: "#ff8000" },
+        { level: "Fair", color: "#ffbf00" },
+        { level: "Getting Better", color: "#ffff00" },
+        { level: "Good", color: "#bfff00" },
+        { level: "Very Good", color: "#80ff00" },
+        { level: "Great", color: "#40ff00" },
+        { level: "Awesome", color: "#00ff00" },
+        { level: "Amazing", color: "#00ff40" },
+        { level: "Perfect", color: "#ffff00" }
+    ];
+
+    function generatePassword() {
+        let allowedChars = '';
+        if (includeUppercase.checked) allowedChars += uppercaseChars;
+        if (includeLowercase.checked) allowedChars += lowercaseChars;
+        if (includeNumbers.checked) allowedChars += numberChars;
+        if (includeSymbols.checked) allowedChars += symbolChars;
+
+        if (!allowedChars) {
+            alert('Please select at least one character type.');
+            return;
+        }
+
+        const length = parseInt(passwordLength.value);
+        if (length < 4 || length > 50) {
+            alert('Password length must be between 4 and 50 characters.');
+            return;
+        }
+
+        let password = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * allowedChars.length);
+            password += allowedChars[randomIndex];
+        }
+
+        passwordDisplay.value = password;
+        updateStrengthMeter(password);
+        updatePasswordLength(password.length);
+    }
+
+    function updateStrengthMeter(password) {
+        const strength = calculatePasswordStrength(password);
+        strengthMeter.textContent = `Strength: ${strengthLevels[strength].level}`;
+        strengthMeter.style.color = strengthLevels[strength].color;
+    }
+
+    function calculatePasswordStrength(password) {
+        let strength = 0;
+
+        // Length check
+        if (password.length >= 30) strength += 5;
+        else if (password.length >= 20) strength += 4;
+        else if (password.length >= 15) strength += 3;
+        else if (password.length >= 10) strength += 2;
+        else if (password.length >= 6) strength += 1;
+
+        // Character type checks
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[a-z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 2;
+
+        // Cap strength at the maximum level
+        return Math.min(strength, strengthLevels.length - 1);
+    }
+
+    function updatePasswordLength(length) {
+        passwordLengthDisplay.textContent = `Password Length: ${length}`;
+    }
+
+    function copyPassword() {
+        if (passwordDisplay.value) {
+            navigator.clipboard.writeText(passwordDisplay.value);
+            alert('Password copied to clipboard!');
+        }
+    }
+
+    passwordDisplay.addEventListener('input', () => {
+        updateStrengthMeter(passwordDisplay.value);
+        updatePasswordLength(passwordDisplay.value.length);
+    });
+
+    // Initial generation
+    generatePassword();
+</script>
+
+</body>
+</html>
