@@ -110,6 +110,11 @@
         .copy-btn:hover {
             background-color: #218838;
         }
+        .crack-time {
+            margin-top: 10px;
+            color: #555;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -141,6 +146,7 @@
     <button class="generate-btn" onclick="generatePassword()">Generate Password</button>
     <div id="strengthMeter" class="strength-meter"></div>
     <div id="passwordLengthDisplay" class="password-length"></div>
+    <div id="crackTime" class="crack-time"></div>
     <button class="copy-btn" onclick="copyPassword()">Copy Password</button>
 </div>
 
@@ -153,6 +159,7 @@
     const includeSymbols = document.getElementById('includeSymbols');
     const strengthMeter = document.getElementById('strengthMeter');
     const passwordLengthDisplay = document.getElementById('passwordLengthDisplay');
+    const crackTime = document.getElementById('crackTime');
 
     const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
@@ -200,6 +207,7 @@
         passwordDisplay.value = password;
         updateStrengthMeter(password);
         updatePasswordLength(password.length);
+        updateCrackTime(password);
     }
 
     function updateStrengthMeter(password) {
@@ -232,6 +240,51 @@
         passwordLengthDisplay.textContent = `Password Length: ${length}`;
     }
 
+    function updateCrackTime(password) {
+        const possibleChars = calculatePossibleChars();
+        const combinations = Math.pow(possibleChars, password.length);
+        const guessesPerSecond = 1e12; // 1 trillion guesses per second
+        const secondsToCrack = combinations / guessesPerSecond;
+
+        crackTime.textContent = `Time to crack: ${formatTime(secondsToCrack)}`;
+    }
+
+    function calculatePossibleChars() {
+        let possibleChars = 0;
+        if (includeUppercase.checked) possibleChars += uppercaseChars.length;
+        if (includeLowercase.checked) possibleChars += lowercaseChars.length;
+        if (includeNumbers.checked) possibleChars += numberChars.length;
+        if (includeSymbols.checked) possibleChars += symbolChars.length;
+        return possibleChars;
+    }
+
+    function formatTime(seconds) {
+        if (seconds < 1) return "less than a second";
+
+        const units = [
+            { name: "trillion years", seconds: 31536000 * 1e12 },
+            { name: "billion years", seconds: 31536000 * 1e9 },
+            { name: "million years", seconds: 31536000 * 1e6 },
+            { name: "millennium", seconds: 31536000000 },
+            { name: "century", seconds: 3153600000 },
+            { name: "decade", seconds: 315360000 },
+            { name: "year", seconds: 31536000 },
+            { name: "month", seconds: 2592000 },
+            { name: "week", seconds: 604800 },
+            { name: "day", seconds: 86400 },
+            { name: "hour", seconds: 3600 },
+            { name: "minute", seconds: 60 },
+            { name: "second", seconds: 1 }
+        ];
+
+        for (const unit of units) {
+            if (seconds >= unit.seconds) {
+                const time = Math.floor(seconds / unit.seconds);
+                return `${time} ${unit.name}${time > 1 && !unit.name.endsWith('years') ? 's' : ''}`;
+            }
+        }
+    }
+
     function copyPassword() {
         if (passwordDisplay.value) {
             navigator.clipboard.writeText(passwordDisplay.value);
@@ -242,6 +295,7 @@
     passwordDisplay.addEventListener('input', () => {
         updateStrengthMeter(passwordDisplay.value);
         updatePasswordLength(passwordDisplay.value.length);
+        updateCrackTime(passwordDisplay.value);
     });
 
     // Initial generation
